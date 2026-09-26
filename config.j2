@@ -1,0 +1,36 @@
+{% if device == "S1" %}
+vlan 101
+ name CONTROL-DATA
+{% endif %}
+
+{% if device == "R1" %}
+router ospf 1 vrf control-data
+ network 10.45.1.0 0.0.0.255 area 0
+ network 10.45.12.0 0.0.0.3 area 0
+{% endif %}
+
+{% if device == "R2" %}
+router ospf 1 vrf control-data
+ network 10.45.12.0 0.0.0.3 area 0
+ network 10.45.2.0 0.0.0.255 area 0
+ default-information originate
+
+ip route vrf control-data 0.0.0.0 0.0.0.0 192.168.42.1
+
+access-list 10 permit 10.45.1.0 0.0.0.255
+access-list 10 permit 10.45.2.0 0.0.0.255
+
+interface GigabitEthernet0/1
+ ip nat inside
+exit
+
+interface GigabitEthernet0/2
+ ip nat inside
+exit
+
+interface GigabitEthernet0/3
+ ip nat outside
+exit
+
+ip nat inside source list 10 interface GigabitEthernet0/3 vrf control-data overload
+{% endif %}
